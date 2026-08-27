@@ -1,7 +1,7 @@
 {
-  "name": "codebeamer-mcp",
+  "name": "codebeamer-mcp-wiki",
   "version": "0.5.2",
-  "description": "MCP server for Codebeamer ALM with read and write capabilities",
+  "description": "MCP server for Codebeamer ALM with read and write capabilities, enhanced with Wiki format support when creating or updating items.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "codebeamer-mcp": "dist/index.js"
+    "codebeamer-mcp-wiki": "dist/index.js"
   },
   "files": [
     "dist",
@@ -21,15 +21,16 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/3KniGHtcZ/codebeamer-mcp.git"
+    "url": "https://github.com/1933173207/CodeBeamer-mcp.git"
   },
-  "homepage": "https://github.com/3KniGHtcZ/codebeamer-mcp#readme",
+  "homepage": "https://github.com/1933173207/CodeBeamer-mcp#readme",
   "keywords": [
     "mcp",
     "codebeamer",
     "alm",
     "model-context-protocol",
-    "claude"
+    "claude",
+    "wiki-format"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean --outDir dist",
