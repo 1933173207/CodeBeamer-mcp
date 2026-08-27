@@ -61,6 +61,7 @@ export interface CbItem {
   name: string;
   typeName?: string;
   description?: string | { markup?: string; value?: string };
+  descriptionFormat?: string;
   tracker?: CbReference;
   project?: CbReference;
   status?: CbReference;
@@ -133,6 +134,7 @@ export interface CbTrackerItemReview {
 export interface CbCreateItemRequest {
   name: string;
   description?: string;
+  descriptionFormat?: "PlainText" | "Wiki";
   categories?: Array<{ id: number; type: string }>;
   status?: { id: number };
   priority?: { id: number };
@@ -144,6 +146,7 @@ export interface CbCreateItemRequest {
 export interface CbUpdateItemRequest {
   name?: string;
   description?: string;
+  descriptionFormat?: "PlainText" | "Wiki";
   status?: { id: number; type?: string };
   priority?: { id: number };
   assignedTo?: Array<{ id: number }>;
@@ -357,6 +360,12 @@ export class CodebeamerClient {
     if (data.description !== undefined) {
       const f = fieldByLegacy("description");
       if (f) fieldValues.push({ fieldId: f.id, type: "WikiTextFieldValue", value: data.description });
+    }
+    if (data.descriptionFormat !== undefined) {
+      const f =
+        schema.find((f) => f.legacyRestName === "descriptionFormat") ??
+        schema.find((f) => f.name.toLowerCase() === "description format");
+      if (f) fieldValues.push({ fieldId: f.id, type: "TextFieldValue", value: data.descriptionFormat });
     }
     if (data.status !== undefined) {
       const f = fieldByLegacy("status");

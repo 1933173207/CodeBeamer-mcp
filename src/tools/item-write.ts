@@ -30,6 +30,10 @@ export function registerItemWriteTools(
           .string()
           .optional()
           .describe("Item description (plain text or wiki markup)"),
+        descriptionFormat: z
+          .enum(["PlainText", "Wiki"])
+          .optional()
+          .describe("Description format: PlainText or Wiki markup"),
         statusId: z
           .number()
           .int()
@@ -68,7 +72,7 @@ export function registerItemWriteTools(
           .describe("Parent item ID to nest this item inside (e.g. a folder)"),
       },
     },
-    async ({ trackerId, name, description, statusId, priorityId, assignedToIds, storyPoints, isFolder, itemTypeName, parentId }) => {
+    async ({ trackerId, name, description, descriptionFormat, statusId, priorityId, assignedToIds, storyPoints, isFolder, itemTypeName, parentId }) => {
       const data: CbCreateItemRequest = { name };
       const desiredType = itemTypeName ?? (isFolder ? "Folder" : undefined);
       if (desiredType) {
@@ -80,6 +84,7 @@ export function registerItemWriteTools(
         }
       }
       if (description !== undefined) data.description = description;
+      if (descriptionFormat !== undefined) data.descriptionFormat = descriptionFormat;
       if (statusId !== undefined) data.status = { id: statusId };
       if (priorityId !== undefined) data.priority = { id: priorityId };
       if (assignedToIds !== undefined) data.assignedTo = assignedToIds.map((id) => ({ id }));
@@ -109,6 +114,10 @@ export function registerItemWriteTools(
           .string()
           .optional()
           .describe("New description (plain text or wiki markup)"),
+        descriptionFormat: z
+          .enum(["PlainText", "Wiki"])
+          .optional()
+          .describe("New description format: PlainText or Wiki markup"),
         statusId: z
           .number()
           .int()
@@ -133,10 +142,11 @@ export function registerItemWriteTools(
           .describe("New story points estimate"),
       },
     },
-    async ({ itemId, name, description, statusId, priorityId, assignedToIds, storyPoints }) => {
+    async ({ itemId, name, description, descriptionFormat, statusId, priorityId, assignedToIds, storyPoints }) => {
       const data: CbUpdateItemRequest = {};
       if (name !== undefined) data.name = name;
       if (description !== undefined) data.description = description;
+      if (descriptionFormat !== undefined) data.descriptionFormat = descriptionFormat;
       if (statusId !== undefined) data.status = { id: statusId };
       if (priorityId !== undefined) data.priority = { id: priorityId };
       if (assignedToIds !== undefined) data.assignedTo = assignedToIds.map((id) => ({ id }));

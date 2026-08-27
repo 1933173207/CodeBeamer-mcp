@@ -42,6 +42,17 @@ describe("create_item", () => {
     expect(item.id).toBe(600);
     expect(item.name).toBe("Simple task");
   });
+
+  it("passes descriptionFormat to the create endpoint", async () => {
+    const client = makeClient();
+    const item = await client.createItem(100, {
+      name: "New bug report",
+      description: "Something is broken",
+      descriptionFormat: "Wiki",
+    });
+
+    expect(item.descriptionFormat).toBe("Wiki");
+  });
 });
 
 describe("update_item", () => {
@@ -56,5 +67,16 @@ describe("update_item", () => {
 
     const text = formatItem(item);
     expect(text).toContain("[500]");
+  });
+
+  it("passes descriptionFormat to the field update endpoint", async () => {
+    const client = makeClient();
+    const item = await client.updateItem(500, {
+      description: "Updated description",
+      descriptionFormat: "Wiki",
+    });
+
+    expect(item.id).toBe(500);
+    expect(item.descriptionFormat).toBe("Wiki");
   });
 });

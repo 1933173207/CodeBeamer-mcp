@@ -32,6 +32,7 @@ export const handlers = [
     HttpResponse.json([
       { id: 1, name: "Summary", legacyRestName: "name" },
       { id: 3, name: "Description", legacyRestName: "description" },
+      { id: 4, name: "Description Format", legacyRestName: "descriptionFormat" },
       { id: 7, name: "Status", legacyRestName: "status" },
       { id: 8, name: "Priority", legacyRestName: "priority" },
       { id: 9, name: "Assigned to", legacyRestName: "assignedTo" },
@@ -81,6 +82,7 @@ export const handlers = [
         id: 600,
         name: body.name as string,
         description: body.description as string | undefined,
+        descriptionFormat: body.descriptionFormat as string | undefined,
         status: body.status as { id: number; name: string } | undefined,
         priority: body.priority as { id: number; name: string } | undefined,
         storyPoints: body.storyPoints as number | undefined,
@@ -90,8 +92,15 @@ export const handlers = [
   }),
 
   // Update item via field-based endpoint
-  http.put(`${BASE}/items/:id/fields`, async ({ params }) => {
-    return HttpResponse.json(makeItem({ id: Number(params.id) }));
+  http.put(`${BASE}/items/:id/fields`, async ({ params, request }) => {
+    const body = (await request.json()) as { fieldValues?: Array<Record<string, unknown>> };
+    const formatField = body.fieldValues?.find((f) => f.name === "Description Format");
+    return HttpResponse.json(
+      makeItem({
+        id: Number(params.id),
+        descriptionFormat: (formatField?.value as string) ?? "PlainText",
+      }),
+    );
   }),
 
   // Add comment (multipart/form-data)
