@@ -21,7 +21,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/1933173207/CodeBeamer-mcp.git"
+    "url": "git+https://github.com/1933173207/CodeBeamer-mcp.git"
   },
   "homepage": "https://github.com/1933173207/CodeBeamer-mcp#readme",
   "keywords": [

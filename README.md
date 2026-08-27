@@ -1,8 +1,8 @@
-# codebeamer-mcp
+> This is a fork of [3KniGHtcZ/codebeamer-mcp](https://github.com/3KniGHtcZ/codebeamer-mcp), adding `descriptionFormat` support for `create_item` and `update_item`.
 
-An MCP (Model Context Protocol) server for Codebeamer ALM. Allows Claude and other MCP clients to read and write projects, trackers, and items in Codebeamer using natural language.
+# codebeamer-mcp-wiki
 
-[![codebeamer-mcp MCP server](https://glama.ai/mcp/servers/3KniGHtcZ/codebeamer-mcp/badges/card.svg)](https://glama.ai/mcp/servers/3KniGHtcZ/codebeamer-mcp)
+An MCP (Model Context Protocol) server for Codebeamer ALM, enhanced with Wiki format support when creating or updating items. Allows Claude and other MCP clients to read and write projects, trackers, and items in Codebeamer using natural language.
 
 ## Tools (19)
 
@@ -46,9 +46,9 @@ An MCP (Model Context Protocol) server for Codebeamer ALM. Allows Claude and oth
 The fastest way — run this command in your terminal:
 
 ```bash
-claude mcp add codebeamer -e CB_URL=https://your-instance.example.com/cb/api \
+claude mcp add CodeBeamer -e CB_URL=https://your-instance.example.com/cb/api \
   -e CB_USERNAME=your_username -e CB_PASSWORD=your_password \
-  -- npx -y codebeamer-mcp
+  -- npx -y codebeamer-mcp-wiki
 ```
 
 Or add it manually to `.mcp.json` in the project root (or `~/.claude/mcp.json` for global scope):
@@ -56,10 +56,10 @@ Or add it manually to `.mcp.json` in the project root (or `~/.claude/mcp.json` f
 ```json
 {
   "mcpServers": {
-    "codebeamer": {
+    "CodeBeamer": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "codebeamer-mcp"],
+      "args": ["-y", "codebeamer-mcp-wiki"],
       "env": {
         "CB_URL": "https://your-instance.example.com/cb/api",
         "CB_USERNAME": "your_username",
@@ -83,9 +83,9 @@ Edit the config file for your platform:
 ```json
 {
   "mcpServers": {
-    "codebeamer": {
+    "CodeBeamer": {
       "command": "npx",
-      "args": ["-y", "codebeamer-mcp"],
+      "args": ["-y", "codebeamer-mcp-wiki"],
       "env": {
         "CB_URL": "https://your-instance.example.com/cb/api",
         "CB_USERNAME": "your_username",
@@ -105,9 +105,9 @@ Add to `.cursor/mcp.json` in the project root (project scope) or `~/.cursor/mcp.
 ```json
 {
   "mcpServers": {
-    "codebeamer": {
+    "CodeBeamer": {
       "command": "npx",
-      "args": ["-y", "codebeamer-mcp"],
+      "args": ["-y", "codebeamer-mcp-wiki"],
       "env": {
         "CB_URL": "https://your-instance.example.com/cb/api",
         "CB_USERNAME": "your_username",
@@ -125,9 +125,9 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 ```json
 {
   "mcpServers": {
-    "codebeamer": {
+    "CodeBeamer": {
       "command": "npx",
-      "args": ["-y", "codebeamer-mcp"],
+      "args": ["-y", "codebeamer-mcp-wiki"],
       "env": {
         "CB_URL": "https://your-instance.example.com/cb/api",
         "CB_USERNAME": "your_username",
@@ -145,10 +145,10 @@ Add to `.vscode/mcp.json` in the project root:
 ```json
 {
   "servers": {
-    "codebeamer": {
+    "CodeBeamer": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "codebeamer-mcp"],
+      "args": ["-y", "codebeamer-mcp-wiki"],
       "env": {
         "CB_URL": "https://your-instance.example.com/cb/api",
         "CB_USERNAME": "your_username",
@@ -166,9 +166,9 @@ Add to `~/.gemini/settings.json`:
 ```json
 {
   "mcpServers": {
-    "codebeamer": {
+    "CodeBeamer": {
       "command": "npx",
-      "args": ["-y", "codebeamer-mcp"],
+      "args": ["-y", "codebeamer-mcp-wiki"],
       "env": {
         "CB_URL": "https://your-instance.example.com/cb/api",
         "CB_USERNAME": "your_username",
@@ -182,32 +182,32 @@ Add to `~/.gemini/settings.json`:
 ### Alternative: global install
 
 ```bash
-npm install -g codebeamer-mcp
+npm install -g codebeamer-mcp-wiki
 ```
 
-Then use `"command": "codebeamer-mcp"` (no `args`) instead of `npx` in any config above.
+Then use `"command": "codebeamer-mcp-wiki"` (no `args`) instead of `npx` in any config above.
 
 ### Pinning a specific version
 
 ```json
-"args": ["-y", "codebeamer-mcp@0.2.0"]
+"args": ["-y", "codebeamer-mcp-wiki@0.5.2"]
 ```
 
 ### Updates
 
 | Method | Update behavior |
 |---|---|
-| `npx -y codebeamer-mcp` | Always fetches the latest version |
-| `npm install -g codebeamer-mcp` | Stays on installed version. Run `npm update -g codebeamer-mcp` to update |
-| Pinned version (`@0.2.0`) | Never auto-updates; change the version string manually |
+| `npx -y codebeamer-mcp-wiki` | Always fetches the latest version |
+| `npm install -g codebeamer-mcp-wiki` | Stays on installed version. Run `npm update -g codebeamer-mcp-wiki` to update |
+| Pinned version (`@0.5.2`) | Never auto-updates; change the version string manually |
 
 > ⚠️ **Never commit `.mcp.json` with real credentials** — it is listed in `.gitignore`.
 
 ### From source (development)
 
 ```bash
-git clone https://github.com/3KniGHtcZ/codebeamer-mcp.git
-cd codebeamer-mcp
+git clone https://github.com/1933173207/CodeBeamer-mcp.git
+cd CodeBeamer-mcp
 npm install
 npm run build
 ```
