@@ -190,7 +190,7 @@ Then use `"command": "codebeamer-mcp-wiki"` (no `args`) instead of `npx` in any 
 ### Pinning a specific version
 
 ```json
-"args": ["-y", "codebeamer-mcp-wiki@0.5.2"]
+"args": ["-y", "codebeamer-mcp-wiki@0.5.3"]
 ```
 
 ### Updates
@@ -199,7 +199,7 @@ Then use `"command": "codebeamer-mcp-wiki"` (no `args`) instead of `npx` in any 
 |---|---|
 | `npx -y codebeamer-mcp-wiki` | Always fetches the latest version |
 | `npm install -g codebeamer-mcp-wiki` | Stays on installed version. Run `npm update -g codebeamer-mcp-wiki` to update |
-| Pinned version (`@0.5.2`) | Never auto-updates; change the version string manually |
+| Pinned version (`@0.5.3`) | Never auto-updates; change the version string manually |
 
 > ⚠️ **Never commit `.mcp.json` with real credentials** — it is listed in `.gitignore`.
 
