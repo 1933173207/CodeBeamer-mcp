@@ -1,4 +1,5 @@
 > This is a fork of [3KniGHtcZ/codebeamer-mcp](https://github.com/3KniGHtcZ/codebeamer-mcp), adding `descriptionFormat` support for `create_item` and `update_item`.
+> Add attachment management tools.
 
 # codebeamer-mcp-wiki
 
@@ -23,6 +24,9 @@ An MCP (Model Context Protocol) server for Codebeamer ALM, enhanced with Wiki fo
 | `get_item_comments` | Get item comments |
 | `get_item_reviews` | Get Review Hub reviews for an item (result, reviewers, votes) |
 | `get_user` | Get user details |
+| `list_item_attachments` | List attachments for an item |
+| `get_item_attachment` | Get attachment details |
+| `download_item_attachment` | Download attachment content |
 
 ### Write
 
@@ -34,6 +38,8 @@ An MCP (Model Context Protocol) server for Codebeamer ALM, enhanced with Wiki fo
 | `create_association` | Create an association between two items (e.g. depends on, blocks) |
 | `create_reference` | Add a downstream traceability reference between two items |
 | `create_harm` | Create a harm entry in an RM Harms List tracker with IMDRF code and severity (1–5) |
+| `upload_item_attachment` | Upload attachment to an item |
+| `delete_item_attachment` | Delete attachment from an item |
 
 ## Installation
 
@@ -190,7 +196,7 @@ Then use `"command": "codebeamer-mcp-wiki"` (no `args`) instead of `npx` in any 
 ### Pinning a specific version
 
 ```json
-"args": ["-y", "codebeamer-mcp-wiki@0.5.3"]
+"args": ["-y", "codebeamer-mcp-wiki@0.5.4"]
 ```
 
 ### Updates
@@ -199,7 +205,7 @@ Then use `"command": "codebeamer-mcp-wiki"` (no `args`) instead of `npx` in any 
 |---|---|
 | `npx -y codebeamer-mcp-wiki` | Always fetches the latest version |
 | `npm install -g codebeamer-mcp-wiki` | Stays on installed version. Run `npm update -g codebeamer-mcp-wiki` to update |
-| Pinned version (`@0.5.3`) | Never auto-updates; change the version string manually |
+| Pinned version (`@0.5.4`) | Never auto-updates; change the version string manually |
 
 > ⚠️ **Never commit `.mcp.json` with real credentials** — it is listed in `.gitignore`.
 

@@ -1,6 +1,6 @@
 {
   "name": "codebeamer-mcp-wiki",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "MCP server for Codebeamer ALM with read and write capabilities, enhanced with Wiki format support when creating or updating items.",
   "license": "MIT",
   "type": "module",
