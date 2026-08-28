@@ -4,6 +4,7 @@ dist/
 coverage/
 *.tsbuildinfo
 logs/
+Docs/
 
 # Auto Claude data directory
 .auto-claude/

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { promises as fs } from "node:fs";
+import { basename } from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CodebeamerClient } from "../client/codebeamer-client.js";
 import {
@@ -107,21 +109,29 @@ export function registerAttachmentTools(
       title: "Upload Item Attachment",
       description:
         "Upload a new attachment to a Codebeamer item. " +
-        "Provide file content as a base64-encoded string.",
+        "Either provide a local file path (filePath) or the file content as a base64-encoded string (fileContentBase64). " +
+        "If filePath is provided, the file is read from disk and uploaded automatically.",
       inputSchema: {
         itemId: z
           .number()
           .int()
           .positive()
           .describe("Numeric item ID"),
+        filePath: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Local file path to upload (alternative to fileContentBase64)"),
         fileName: z
           .string()
           .min(1)
-          .describe("Attachment file name including extension"),
+          .optional()
+          .describe("Attachment file name including extension (defaults to the basename of filePath)"),
         fileContentBase64: z
           .string()
           .min(1)
-          .describe("Base64-encoded file content"),
+          .optional()
+          .describe("Base64-encoded file content (alternative to filePath)"),
         mimeType: z
           .string()
           .optional()
@@ -132,8 +142,16 @@ export function registerAttachmentTools(
           .describe("Optional attachment description"),
       },
     },
-    async ({ itemId, fileName, fileContentBase64, mimeType, description }) => {
-      const buffer = Buffer.from(fileContentBase64, "base64");
+    async ({ itemId, filePath, fileName, fileContentBase64, mimeType, description }) => {
+      let buffer: Buffer;
+      if (filePath) {
+        buffer = await fs.readFile(filePath);
+        if (!fileName) fileName = basename(filePath);
+      } else if (fileContentBase64) {
+        buffer = Buffer.from(fileContentBase64, "base64");
+      } else {
+        throw new Error("Either filePath or fileContentBase64 must be provided.");
+      }
       const attachments = await client.uploadItemAttachment(
         itemId,
         fileName,
@@ -153,7 +171,8 @@ export function registerAttachmentTools(
       title: "Update Item Attachment",
       description:
         "Replace the content of an existing attachment. " +
-        "Provide new content as a base64-encoded string.",
+        "Either provide a local file path (filePath) or the new file content as a base64-encoded string (fileContentBase64). " +
+        "If filePath is provided, the file is read from disk and uploaded automatically.",
       inputSchema: {
         itemId: z
           .number()
@@ -165,14 +184,21 @@ export function registerAttachmentTools(
           .int()
           .positive()
           .describe("Numeric attachment ID to update"),
+        filePath: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Local file path to upload (alternative to fileContentBase64)"),
         fileName: z
           .string()
           .min(1)
-          .describe("Attachment file name including extension"),
+          .optional()
+          .describe("Attachment file name including extension (defaults to the basename of filePath)"),
         fileContentBase64: z
           .string()
           .min(1)
-          .describe("Base64-encoded new file content"),
+          .optional()
+          .describe("Base64-encoded new file content (alternative to filePath)"),
         mimeType: z
           .string()
           .optional()
@@ -183,8 +209,16 @@ export function registerAttachmentTools(
           .describe("Optional attachment description"),
       },
     },
-    async ({ itemId, attachmentId, fileName, fileContentBase64, mimeType, description }) => {
-      const buffer = Buffer.from(fileContentBase64, "base64");
+    async ({ itemId, attachmentId, filePath, fileName, fileContentBase64, mimeType, description }) => {
+      let buffer: Buffer;
+      if (filePath) {
+        buffer = await fs.readFile(filePath);
+        if (!fileName) fileName = basename(filePath);
+      } else if (fileContentBase64) {
+        buffer = Buffer.from(fileContentBase64, "base64");
+      } else {
+        throw new Error("Either filePath or fileContentBase64 must be provided.");
+      }
       const attachment = await client.updateItemAttachmentContent(
         itemId,
         attachmentId,
