@@ -6,9 +6,14 @@ export interface RequestOptions {
   resource?: string;
 }
 
+export interface FormDataBlobValue {
+  blob: Blob;
+  filename?: string;
+}
+
 export interface BodyRequestOptions extends RequestOptions {
   body?: unknown;
-  formData?: Record<string, string>;
+  formData?: Record<string, string | Blob | FormDataBlobValue>;
 }
 
 export class HttpClient {
@@ -31,6 +36,40 @@ export class HttpClient {
 
   async put<T>(path: string, options: BodyRequestOptions = {}): Promise<T> {
     return this.request<T>("PUT", path, options);
+  }
+
+  async getBinary(path: string, options: RequestOptions = {}): Promise<ArrayBuffer> {
+    const url = new URL(`${this.config.baseUrl}${path}`);
+
+    if (options.params) {
+      for (const [key, value] of Object.entries(options.params)) {
+        if (value !== undefined) {
+          url.searchParams.set(key, String(value));
+        }
+      }
+    }
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        Authorization: this.authHeader,
+        Accept: "application/octet-stream",
+        "User-Agent": "codebeamer-mcp/0.1.0",
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      let body: unknown;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        body = text;
+      }
+      throw mapHttpError(response.status, body, options.resource ?? path);
+    }
+
+    return response.arrayBuffer();
   }
 
   private async request<T>(
@@ -62,7 +101,14 @@ export class HttpClient {
     } else if (options.formData !== undefined) {
       const fd = new FormData();
       for (const [key, value] of Object.entries(options.formData)) {
-        fd.append(key, value);
+        if (typeof value === "string") {
+          fd.append(key, value);
+        } else if (value instanceof Blob) {
+          fd.append(key, value, key);
+        } else {
+          // FormDataBlobValue
+          fd.append(key, value.blob, value.filename ?? key);
+        }
       }
       init.body = fd;
     }

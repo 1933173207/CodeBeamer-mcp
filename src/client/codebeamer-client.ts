@@ -98,6 +98,18 @@ export interface CbComment {
   createdBy?: CbReference;
 }
 
+export interface CbAttachment {
+  id: number;
+  name: string;
+  description?: string;
+  mimeType?: string;
+  fileSize?: number;
+  createdAt?: string;
+  createdBy?: CbReference;
+  modifiedAt?: string;
+  modifiedBy?: CbReference;
+}
+
 export interface CbUser {
   id: number;
   name: string;
@@ -328,6 +340,75 @@ export class CodebeamerClient {
   // Users
   getUser(id: number): Promise<CbUser> {
     return this.http.get(`/users/${id}`, { resource: `user ${id}` });
+  }
+
+  // --- Attachments ---
+
+  async listItemAttachments(itemId: number, fileName?: string): Promise<CbAttachment[]> {
+    const raw = await this.http.get<unknown>(`/items/${itemId}/attachments`, {
+      params: fileName ? { fileName } : undefined,
+      resource: `attachments for item ${itemId}`,
+    });
+    if (Array.isArray(raw)) return raw;
+    return (raw as { attachments?: CbAttachment[] }).attachments ?? [];
+  }
+
+  getItemAttachment(itemId: number, attachmentId: number): Promise<CbAttachment> {
+    return this.http.get(`/items/${itemId}/attachments/${attachmentId}`, {
+      resource: `attachment ${attachmentId} of item ${itemId}`,
+    });
+  }
+
+  getItemAttachmentContent(itemId: number, attachmentId: number): Promise<ArrayBuffer> {
+    return this.http.getBinary(`/items/${itemId}/attachments/${attachmentId}/content`, {
+      resource: `attachment content ${attachmentId} of item ${itemId}`,
+    });
+  }
+
+  async uploadItemAttachment(
+    itemId: number,
+    fileName: string,
+    content: Buffer,
+    mimeType?: string,
+    description?: string,
+  ): Promise<CbAttachment[]> {
+    const formData: Record<string, string | { blob: Blob; filename: string }> = {
+      attachments: {
+        blob: new Blob([new Uint8Array(content)], { type: mimeType ?? "application/octet-stream" }),
+        filename: fileName,
+      },
+    };
+    if (description) {
+      formData.description = description;
+    }
+    const raw = await this.http.post<unknown>(`/items/${itemId}/attachments`, {
+      formData,
+      resource: `upload attachment to item ${itemId}`,
+    });
+    return Array.isArray(raw) ? (raw as CbAttachment[]) : [];
+  }
+
+  updateItemAttachmentContent(
+    itemId: number,
+    attachmentId: number,
+    fileName: string,
+    content: Buffer,
+    mimeType?: string,
+    description?: string,
+  ): Promise<CbAttachment> {
+    const formData: Record<string, string | { blob: Blob; filename: string }> = {
+      content: {
+        blob: new Blob([new Uint8Array(content)], { type: mimeType ?? "application/octet-stream" }),
+        filename: fileName,
+      },
+    };
+    if (description) {
+      formData.description = description;
+    }
+    return this.http.put(`/items/${itemId}/attachments/${attachmentId}/content`, {
+      formData,
+      resource: `update attachment ${attachmentId} of item ${itemId}`,
+    });
   }
 
   // --- Write operations ---
