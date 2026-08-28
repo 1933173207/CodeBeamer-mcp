@@ -207,11 +207,11 @@ function toArray<T>(response: unknown): T[] {
     // Generic fallback: find first array-valued key
     for (const key of Object.keys(obj)) {
       if (Array.isArray(obj[key])) {
-        console.error(`[codebeamer-mcp] Using response key "${key}" instead of "items"`);
+        console.error(`[codebeamer-mcp-wiki] Using response key "${key}" instead of "items"`);
         return obj[key] as T[];
       }
     }
-    console.error("[codebeamer-mcp] No array found in response:", JSON.stringify(obj).slice(0, 300));
+    console.error("[codebeamer-mcp-wiki] No array found in response:", JSON.stringify(obj).slice(0, 300));
   }
   return [];
 }

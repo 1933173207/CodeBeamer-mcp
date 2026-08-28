@@ -1,5 +1,10 @@
+import { createRequire } from "node:module";
 import type { Config } from "../config.js";
 import { mapHttpError } from "./errors.js";
+
+const require = createRequire(import.meta.url);
+const { version } = require("../../package.json") as { version: string };
+const USER_AGENT = `codebeamer-mcp-wiki/${version}`;
 
 export interface RequestOptions {
   params?: Record<string, string | number | boolean | undefined>;
@@ -54,7 +59,7 @@ export class HttpClient {
       headers: {
         Authorization: this.authHeader,
         Accept: "application/octet-stream",
-        "User-Agent": "codebeamer-mcp/0.1.0",
+        "User-Agent": USER_AGENT,
       },
     });
 
@@ -90,7 +95,7 @@ export class HttpClient {
     const headers: Record<string, string> = {
       Authorization: this.authHeader,
       Accept: "application/json",
-      "User-Agent": "codebeamer-mcp/0.1.0",
+      "User-Agent": USER_AGENT,
     };
 
     const init: RequestInit = { method, headers };

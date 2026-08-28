@@ -6,6 +6,13 @@ import { makeUser } from "./fixtures/users.js";
 
 const BASE = "https://test-cb.example.com/v3";
 
+// Persist fields updated via the field-based PUT endpoint so subsequent GETs can reflect them.
+const updatedItemFields = new Map<number, { descriptionFormat?: string }>();
+
+export function resetUpdatedItemFields(): void {
+  updatedItemFields.clear();
+}
+
 export const handlers = [
   // Projects
   http.get(`${BASE}/projects`, () =>
@@ -64,7 +71,8 @@ export const handlers = [
   http.get(`${BASE}/items/:id`, ({ params }) => {
     const id = Number(params.id);
     if (id === 700) return HttpResponse.json(makeTestCaseItem());
-    return HttpResponse.json(makeItem({ id }));
+    const updated = updatedItemFields.get(id);
+    return HttpResponse.json(makeItem({ id, descriptionFormat: updated?.descriptionFormat }));
   }),
 
   // Users
@@ -93,12 +101,18 @@ export const handlers = [
 
   // Update item via field-based endpoint
   http.put(`${BASE}/items/:id/fields`, async ({ params, request }) => {
+    const id = Number(params.id);
     const body = (await request.json()) as { fieldValues?: Array<Record<string, unknown>> };
-    const formatField = body.fieldValues?.find((f) => f.name === "Description Format");
+    // Description Format fieldId is 4 in the mocked schema
+    const formatField = body.fieldValues?.find((f) => f.fieldId === 4);
+    const descriptionFormat = (formatField?.value as string) ?? updatedItemFields.get(id)?.descriptionFormat;
+    if (descriptionFormat !== undefined) {
+      updatedItemFields.set(id, { ...updatedItemFields.get(id), descriptionFormat });
+    }
     return HttpResponse.json(
       makeItem({
-        id: Number(params.id),
-        descriptionFormat: (formatField?.value as string) ?? "PlainText",
+        id,
+        descriptionFormat,
       }),
     );
   }),
