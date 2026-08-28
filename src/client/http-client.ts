@@ -1,10 +1,5 @@
-import { createRequire } from "node:module";
 import type { Config } from "../config.js";
 import { mapHttpError } from "./errors.js";
-
-const require = createRequire(import.meta.url);
-const { version } = require("../../package.json") as { version: string };
-const USER_AGENT = `codebeamer-mcp-wiki/${version}`;
 
 export interface RequestOptions {
   params?: Record<string, string | number | boolean | undefined>;
@@ -23,12 +18,14 @@ export interface BodyRequestOptions extends RequestOptions {
 
 export class HttpClient {
   private readonly authHeader: string;
+  private readonly userAgent: string;
 
-  constructor(private readonly config: Config) {
+  constructor(private readonly config: Config, version?: string) {
     const encoded = Buffer.from(
       `${config.username}:${config.password}`,
     ).toString("base64");
     this.authHeader = `Basic ${encoded}`;
+    this.userAgent = `codebeamer-mcp-wiki/${version ?? "0.0.0"}`;
   }
 
   async get<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -59,7 +56,7 @@ export class HttpClient {
       headers: {
         Authorization: this.authHeader,
         Accept: "application/octet-stream",
-        "User-Agent": USER_AGENT,
+        "User-Agent": this.userAgent,
       },
     });
 
@@ -95,7 +92,7 @@ export class HttpClient {
     const headers: Record<string, string> = {
       Authorization: this.authHeader,
       Accept: "application/json",
-      "User-Agent": USER_AGENT,
+      "User-Agent": this.userAgent,
     };
 
     const init: RequestInit = { method, headers };

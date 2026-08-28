@@ -33,7 +33,7 @@ const server = new McpServer({
   version,
 });
 
-const httpClient = new HttpClient(config);
+const httpClient = new HttpClient(config, version);
 const client = new CodebeamerClient(httpClient);
 
 registerProjectTools(server, client);
