@@ -5,7 +5,7 @@
 
 An MCP (Model Context Protocol) server for Codebeamer ALM, enhanced with Wiki format support when creating or updating items. Allows Claude and other MCP clients to read and write projects, trackers, and items in Codebeamer using natural language.
 
-## Tools (19)
+## Tools (24)
 
 ### Read
 
