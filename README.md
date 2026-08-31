@@ -1,16 +1,17 @@
-> This is a fork of [3KniGHtcZ/codebeamer-mcp](https://github.com/3KniGHtcZ/codebeamer-mcp), adding `descriptionFormat` support for `create_item` and `update_item`.
-> Add attachment management tools.
+> This is a fork of [3KniGHtcZ/codebeamer-mcp](https://github.com/3KniGHtcZ/codebeamer-mcp), I modified some tools and added some tools.
 
 # codebeamer-mcp-wiki
 
-An MCP (Model Context Protocol) server for Codebeamer ALM, enhanced with Wiki format support when creating or updating items. Allows Claude and other MCP clients to read and write projects, trackers, and items in Codebeamer using natural language.
+An MCP (Model Context Protocol) server for Codebeamer ALM. Allows Claude and other MCP clients to read and write projects, trackers, and items in Codebeamer using natural language.
 
 ## Tools (24)
 
-### Read
+### Original tools
+
+#### Read
 
 | Tool | Description |
-|---|---|
+| ---- | ----------- |
 | `list_projects` | List all projects |
 | `get_project` | Get project details |
 | `list_trackers` | List trackers in a project |
@@ -24,22 +25,27 @@ An MCP (Model Context Protocol) server for Codebeamer ALM, enhanced with Wiki fo
 | `get_item_comments` | Get item comments |
 | `get_item_reviews` | Get Review Hub reviews for an item (result, reviewers, votes) |
 | `get_user` | Get user details |
-| `list_item_attachments` | List attachments for an item |
-| `get_item_attachment` | Get attachment details |
-| `download_item_attachment` | Download attachment content |
 
-### Write
+#### Write
 
 | Tool | Description |
-|---|---|
-| `create_item` | Create a new item in a tracker. Supports folders, item type, and parent nesting |
-| `update_item` | Update an existing item (name, description, status, priority, assignee, custom fields) |
+| ---- | ----------- |
 | `add_comment` | Add a comment to an item |
 | `create_association` | Create an association between two items (e.g. depends on, blocks) |
 | `create_reference` | Add a downstream traceability reference between two items |
 | `create_harm` | Create a harm entry in an RM Harms List tracker with IMDRF code and severity (1–5) |
-| `upload_item_attachment` | Upload attachment to an item |
-| `delete_item_attachment` | Delete attachment from an item |
+
+### Tools modified or added in this fork
+
+| Tool | Change | Description |
+| ---- | ------ | ----------- |
+| `create_item` | Modified | Create a new item in a tracker. Supports folders, item type, parent nesting, and `descriptionFormat` for Wiki markup |
+| `update_item` | Modified | Update an existing item (name, description, status, priority, assignee, custom fields). Supports `descriptionFormat` for Wiki markup |
+| `list_item_attachments` | Added | List attachments for an item |
+| `get_item_attachment` | Added | Get attachment details |
+| `download_item_attachment` | Added | Download attachment content |
+| `upload_item_attachment` | Added | Upload attachment to an item |
+| `update_item_attachment` | Added | Update attachment content for an item |
 
 ## Installation
 
@@ -81,7 +87,7 @@ Or add it manually to `.mcp.json` in the project root (or `~/.claude/mcp.json` f
 Edit the config file for your platform:
 
 | Platform | Path |
-|---|---|
+| -------- | ---- |
 | macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
 | Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
 | Linux | `~/.config/Claude/claude_desktop_config.json` |
@@ -196,16 +202,16 @@ Then use `"command": "codebeamer-mcp-wiki"` (no `args`) instead of `npx` in any 
 ### Pinning a specific version
 
 ```json
-"args": ["-y", "codebeamer-mcp-wiki@0.5.4"]
+"args": ["-y", "codebeamer-mcp-wiki@0.5.5"]
 ```
 
 ### Updates
 
 | Method | Update behavior |
-|---|---|
+| ------ | --------------- |
 | `npx -y codebeamer-mcp-wiki` | Always fetches the latest version |
 | `npm install -g codebeamer-mcp-wiki` | Stays on installed version. Run `npm update -g codebeamer-mcp-wiki` to update |
-| Pinned version (`@0.5.4`) | Never auto-updates; change the version string manually |
+| Pinned version (`@0.5.5`) | Never auto-updates; change the version string manually |
 
 > ⚠️ **Never commit `.mcp.json` with real credentials** — it is listed in `.gitignore`.
 
@@ -237,11 +243,8 @@ CB_URL=http://localhost:3001 CB_USERNAME=mock CB_PASSWORD=mock \
 ## Configuration
 
 | Variable | Description | Default |
-|---|---|---|
+| -------- | ----------- | ------- |
 | `CB_URL` | Codebeamer API URL, e.g. `https://your-instance.example.com/cb/api` (the server appends `/v3` automatically) | _(required)_ |
 | `CB_USERNAME` | Login username | _(required)_ |
 | `CB_PASSWORD` | Password | _(required)_ |
 | `CB_UNSAFE_SSL` | Set to `true` to allow connections to servers with unverified/self-signed certificates | `false` |
-| `CB_API_VERSION` | API version | `v3` |
-| `CB_TIMEOUT_MS` | Request timeout (ms) | `30000` |
-| `CB_MAX_ITEMS` | Max items per page | `100` |
