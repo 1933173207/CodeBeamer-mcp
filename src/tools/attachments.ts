@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { promises as fs } from "node:fs";
-import { basename } from "node:path";
+import { basename, resolve } from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CodebeamerClient } from "../client/codebeamer-client.js";
 import {
@@ -70,8 +70,8 @@ export function registerAttachmentTools(
     {
       title: "Download Item Attachment",
       description:
-        "Download the binary content of an attachment. " +
-        "Returns base64-encoded data together with metadata.",
+        "Download the binary content of an attachment and save it to a local file. " +
+        "Returns the saved file path together with metadata.",
       inputSchema: {
         itemId: z
           .number()
@@ -83,22 +83,49 @@ export function registerAttachmentTools(
           .int()
           .positive()
           .describe("Numeric attachment ID"),
+        filePath: z
+          .string()
+          .min(1)
+          .optional()
+          .describe(
+            "Local file path or directory to save the attachment. " +
+            "If it is a directory, the attachment is saved inside it using its original file name. " +
+            "Defaults to the attachment name in the current working directory."
+          ),
       },
     },
-    async ({ itemId, attachmentId }) => {
+    async ({ itemId, attachmentId, filePath }) => {
       const [meta, buffer] = await Promise.all([
         client.getItemAttachment(itemId, attachmentId),
         client.getItemAttachmentContent(itemId, attachmentId),
       ]);
-      const base64 = Buffer.from(buffer).toString("base64");
+
+      let targetPath = resolve(filePath ?? meta.name);
+
+      // If filePath is a directory (existing or explicit via trailing slash), save inside it using the attachment name.
+      const isExplicitDirectory = filePath?.endsWith("/") || filePath?.endsWith("\\");
+      const isExistingDirectory = await fs
+        .stat(targetPath)
+        .then((s) => s.isDirectory())
+        .catch(() => false);
+      const looksLikeDirectory =
+        isExplicitDirectory || isExistingDirectory || !basename(targetPath).includes(".");
+      if (looksLikeDirectory) {
+        targetPath = resolve(targetPath, meta.name);
+      }
+
+      await fs.mkdir(resolve(targetPath, ".."), { recursive: true });
+      await fs.writeFile(targetPath, Buffer.from(buffer));
+
       const header = [
         `File: ${meta.name}`,
         `MIME type: ${meta.mimeType ?? "unknown"}`,
         `Size: ${meta.fileSize ?? buffer.byteLength} bytes`,
+        `Saved to: ${targetPath}`,
         "",
       ].join("\n");
       return {
-        content: [{ type: "text", text: `${header}${base64}` }],
+        content: [{ type: "text", text: header }],
       };
     },
   );
