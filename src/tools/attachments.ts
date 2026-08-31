@@ -18,7 +18,7 @@ export function registerAttachmentTools(
       title: "List Item Attachments",
       description:
         "List all attachments of a Codebeamer tracker item. " +
-        "Optionally filter by filename.",
+        "Optionally filter by filename (case-sensitive prefix match).",
       inputSchema: {
         itemId: z
           .number()
@@ -28,7 +28,7 @@ export function registerAttachmentTools(
         fileName: z
           .string()
           .optional()
-          .describe("Optional filename filter (partial match)"),
+          .describe("Optional filename filter (case-sensitive prefix match)"),
       },
     },
     async ({ itemId, fileName }) => {
@@ -148,6 +148,7 @@ export function registerAttachmentTools(
         buffer = await fs.readFile(filePath);
         if (!fileName) fileName = basename(filePath);
       } else if (fileContentBase64) {
+        if (!fileName) throw new Error("fileName is required when using fileContentBase64.");
         buffer = Buffer.from(fileContentBase64, "base64");
       } else {
         throw new Error("Either filePath or fileContentBase64 must be provided.");
@@ -215,6 +216,7 @@ export function registerAttachmentTools(
         buffer = await fs.readFile(filePath);
         if (!fileName) fileName = basename(filePath);
       } else if (fileContentBase64) {
+        if (!fileName) throw new Error("fileName is required when using fileContentBase64.");
         buffer = Buffer.from(fileContentBase64, "base64");
       } else {
         throw new Error("Either filePath or fileContentBase64 must be provided.");
