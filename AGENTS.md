@@ -1,11 +1,11 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Agent when working with code in this repository.
 
 ## Commands
 
 ```bash
-npm run build          # compile TypeScript → dist/ (tsup, ESM)
+npm run build          # compile TypeScript to dist/ (tsup, ESM)
 npm run dev            # watch mode build
 npm run typecheck      # type-check without emitting
 npm test               # run all tests once (vitest)
@@ -22,7 +22,7 @@ CB_URL=http://localhost:3001 CB_USERNAME=mock CB_PASSWORD=mock npm run inspect
 
 ## Architecture
 
-The server is a read-only MCP server that exposes Codebeamer ALM data to LLM clients via stdio transport.
+The server is a read/write MCP server that exposes Codebeamer ALM data to LLM clients via stdio transport.
 
 ```
 src/
@@ -32,8 +32,8 @@ src/
     http-client.ts          # thin fetch wrapper (Basic Auth, query params, error mapping)
     codebeamer-client.ts    # typed Codebeamer API methods + response types
     errors.ts               # maps HTTP status codes to McpError
-  formatters/               # convert API types → markdown strings for tool responses
-  tools/                    # register MCP tools on the server (one file per domain)
+  formatters/               # convert API types to markdown strings for tool responses
+  tools/                    # register MCP tools on the server (one file per domain; includes read and write tools)
     index.ts                # re-exports all register* functions
 ```
 
@@ -61,4 +61,4 @@ Tests use **MSW** (Mock Service Worker) to intercept `fetch` calls. No real Code
 - `tests/mocks/handlers.ts` — defines all intercepted routes
 - `tests/mocks/fixtures/` — factory functions (`makeItem()`, `makeTracker()`, …) for test data
 
-Tests call `CodebeamerClient` methods directly and assert on the formatted markdown output. There are no tool-layer tests; tool files are thin wrappers and are tested implicitly through the client+formatter tests.
+Tests call `CodebeamerClient` methods directly and assert on the formatted markdown output. The `tests/unit/tools/` directory also contains tool-layer tests for many read and write tools (e.g., `items.test.ts`, `trackers.test.ts`, `item-write.test.ts`, `comments-write.test.ts`, `associations-write.test.ts`).
