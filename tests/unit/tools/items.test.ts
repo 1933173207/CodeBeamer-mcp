@@ -13,6 +13,7 @@ function makeClient() {
     baseUrl: BASE,
     username: "testuser",
     password: "testpass",
+    unsafeSsl: true,
   });
   return new CodebeamerClient(http);
 }

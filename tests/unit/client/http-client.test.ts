@@ -18,6 +18,7 @@ function makeClient() {
     baseUrl: BASE,
     username: "testuser",
     password: "testpass",
+    unsafeSsl: true,
   });
 }
 
