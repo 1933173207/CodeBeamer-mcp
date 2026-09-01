@@ -412,10 +412,14 @@ export class CodebeamerClient {
     }
 
     if (field.type === "TrackerItemChoiceField") {
+      const decodedDescription = field.description
+        ?.replace(/&#39;/g, "'")
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, "&");
+
       const trackerNameMatch =
-        field.description?.match(/tracker\s+['"‘’“"]([^'"‘’“"]+)['"‘’“"]/i)
-        ?? field.description?.match(/tracker\s+['"]?([^'"\.]+?)['"]?(?=\s+in advance)/i)
-        ?? field.description?.match(/tracker\s+['"]?([^'"\.\r\n]+?)['"]?/i);
+        decodedDescription?.match(/tracker\s+['"‘’“"]([^'"‘’“"]+)['"‘’“"]/i)
+        ?? decodedDescription?.match(/tracker\s+['"]?([^'"\.\r\n]+?)['"]?(?=\s+in advance)/i);
 
       if (trackerNameMatch) {
         const targetName = trackerNameMatch[1].trim();
