@@ -64,4 +64,5 @@ Tests use **MSW** (Mock Service Worker) to intercept `fetch` calls. No real Code
 Tests call `CodebeamerClient` methods directly and assert on the formatted markdown output. The `tests/unit/tools/` directory also contains tool-layer tests for many read and write tools (e.g., `items.test.ts`, `trackers.test.ts`, `item-write.test.ts`, `comments-write.test.ts`, `associations-write.test.ts`).
 
 ## Important
-- After agent adds a new feature, it should notify the user to restart the MCP server to ensure the new feature is available.
+
+- After agent adds a new feature or modifies any existing typescript code, it should notify the user to restart the MCP server to ensure the new feature is available.
