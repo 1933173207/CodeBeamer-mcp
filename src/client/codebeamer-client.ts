@@ -412,10 +412,43 @@ export class CodebeamerClient {
     }
 
     if (field.type === "TrackerItemChoiceField") {
-      const note =
-        "This field references tracker items. Provide the target item ID(s). " +
-        "Use list_trackers and list_tracker_items to find valid item IDs.";
-      return { field, options: [], note };
+      const trackerNameMatch =
+        field.description?.match(/tracker\s+['"‘’“"]([^'"‘’“"]+)['"‘’“"]/i)
+        ?? field.description?.match(/tracker\s+['"]?([^'"\.]+?)['"]?(?=\s+in advance)/i)
+        ?? field.description?.match(/tracker\s+['"]?([^'"\.\r\n]+?)['"]?/i);
+
+      if (trackerNameMatch) {
+        const targetName = trackerNameMatch[1].trim();
+        const tracker = await this.getTracker(trackerId);
+        const projectId = tracker.project?.id;
+        if (projectId) {
+          const trackers = await this.listTrackers(projectId, 1, 100);
+          const targetTracker = trackers.find((t) =>
+            t.name.toLowerCase().includes(targetName.toLowerCase()) ||
+            targetName.toLowerCase().includes(t.name.toLowerCase())
+          );
+          if (targetTracker) {
+            const { items } = await this.listTrackerItems(targetTracker.id, 1, 100);
+            return {
+              field,
+              options: items.map((item) => ({
+                id: item.id,
+                name: item.name,
+                type: "TrackerItemReference",
+                description: item.status?.name,
+              })),
+            };
+          }
+        }
+      }
+
+      return {
+        field,
+        options: [],
+        note:
+          "This field references tracker items. Could not automatically discover the target tracker from the field description. " +
+          "Use list_trackers and list_tracker_items to find valid item IDs, or provide the ID directly.",
+      };
     }
 
     return {
