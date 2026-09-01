@@ -48,6 +48,9 @@ export interface CbTrackerSchemaField {
   trackerItemField?: string;
   legacyRestName?: string;
   options?: CbTrackerSchemaOption[];
+  mandatoryIfDependencyFormula?: string;
+  multipleValues?: boolean;
+  referenceType?: string;
 }
 
 export interface CbTestStep {
@@ -152,7 +155,13 @@ export interface CbCreateItemRequest {
   priority?: { id: number };
   assignedTo?: Array<{ id: number }>;
   storyPoints?: number;
-  customFields?: Array<{ fieldId: number; type: string; value: unknown }>;
+  customFields?: Array<{
+    fieldId: number;
+    name?: string;
+    type: string;
+    value?: unknown;
+    values?: Array<{ id: number; name?: string; type: string }>;
+  }>;
 }
 
 export interface CbUpdateItemRequest {
