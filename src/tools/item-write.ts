@@ -7,6 +7,11 @@ import type {
   CbUpdateItemRequest,
 } from "../client/codebeamer-client.js";
 import { formatItem } from "../formatters/item-formatter.js";
+import {
+  getTrackerConfig,
+  validateCustomFieldsByConfig,
+  type TrackerConfigEntry,
+} from "../tracker-config.js";
 
 interface CustomFieldInput {
   fieldName: string;
@@ -15,6 +20,25 @@ interface CustomFieldInput {
 
 function stripHtml(input: string): string {
   return input.replace(/<[^>]+>/g, "").trim();
+}
+
+function resolveValueByConfig(
+  trackerConfig: TrackerConfigEntry,
+  fieldName: string,
+  value: string | number,
+): { id: number; name: string } | undefined {
+  const normalizedFieldName = stripHtml(fieldName).toLowerCase();
+  const fieldConfig = trackerConfig.requiredFields.find(
+    (f) => stripHtml(f.fieldName).toLowerCase() === normalizedFieldName,
+  );
+  if (!fieldConfig) return undefined;
+
+  if (typeof value === "number") {
+    return fieldConfig.optionalValues.find((ov) => ov.id === value);
+  }
+  return fieldConfig.optionalValues.find(
+    (ov) => ov.name.toLowerCase() === value.toLowerCase(),
+  );
 }
 
 function findSchemaField(
@@ -37,6 +61,7 @@ function normalizeCustomFieldValue(
 function resolveCustomFields(
   inputs: CustomFieldInput[],
   schema: CbTrackerSchemaField[],
+  trackerConfig?: TrackerConfigEntry,
 ): NonNullable<CbCreateItemRequest["customFields"]> {
   const result: NonNullable<CbCreateItemRequest["customFields"]> = [];
 
@@ -58,6 +83,13 @@ function resolveCustomFields(
         );
       }
       const resolved = rawValues.map((v) => {
+        const configValue = trackerConfig
+          ? resolveValueByConfig(trackerConfig, input.fieldName, v)
+          : undefined;
+        if (configValue && typeof configValue === "object" && "id" in configValue) {
+          return { id: configValue.id, name: configValue.name, type: "ChoiceOptionReference" };
+        }
+
         const option = field.options!.find((o) => {
           if (typeof v === "number" || /^\d+$/.test(String(v))) {
             return String(o.id) === String(v);
@@ -78,6 +110,13 @@ function resolveCustomFields(
 
     if (field.type === "TrackerItemChoiceField") {
       const resolved = rawValues.map((v) => {
+        const configValue = trackerConfig
+          ? resolveValueByConfig(trackerConfig, input.fieldName, v)
+          : undefined;
+        if (configValue && typeof configValue === "object" && "id" in configValue) {
+          return { id: configValue.id, type: "TrackerItemReference" };
+        }
+
         const id = typeof v === "number" ? v : Number(v);
         if (Number.isNaN(id)) {
           throw new Error(
@@ -270,8 +309,13 @@ export function registerItemWriteTools(
       if (storyPoints !== undefined) data.storyPoints = storyPoints;
 
       if (customFields && customFields.length > 0) {
-        validateMandatoryCustomFields(schema, customFields, desiredType);
-        data.customFields = resolveCustomFields(customFields, schema);
+        const trackerConfig = getTrackerConfig(trackerId);
+        if (trackerConfig) {
+          validateCustomFieldsByConfig(trackerConfig, customFields);
+        } else {
+          validateMandatoryCustomFields(schema, customFields, desiredType);
+        }
+        data.customFields = resolveCustomFields(customFields, schema, trackerConfig);
       }
 
       const item = await client.createItem(trackerId, data, parentId);
@@ -286,6 +330,7 @@ export function registerItemWriteTools(
       description:
         "Update fields on an existing Codebeamer work item. " +
         "Only provide the fields you want to change. " +
+        "Supports custom fields via the customFields array. " +
         "Returns the updated item with all fields.",
       inputSchema: {
         itemId: z
@@ -324,9 +369,20 @@ export function registerItemWriteTools(
           .min(0)
           .optional()
           .describe("New story points estimate"),
+        customFields: z
+          .array(
+            z.object({
+              fieldName: z.string().describe("Field display name or legacyRestName"),
+              value: z
+                .union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))])
+                .describe("Field value: option name/id, target item/user id, or plain text/number"),
+            }),
+          )
+          .optional()
+          .describe("Custom fields to update. Use get_tracker_config or get_tracker to discover available fields."),
       },
     },
-    async ({ itemId, name, description, descriptionFormat, statusId, priorityId, assignedToIds, storyPoints }) => {
+    async ({ itemId, name, description, descriptionFormat, statusId, priorityId, assignedToIds, storyPoints, customFields }) => {
       const data: CbUpdateItemRequest = {};
       if (name !== undefined) data.name = name;
       if (description !== undefined) data.description = description;
@@ -335,6 +391,20 @@ export function registerItemWriteTools(
       if (priorityId !== undefined) data.priority = { id: priorityId };
       if (assignedToIds !== undefined) data.assignedTo = assignedToIds.map((id) => ({ id }));
       if (storyPoints !== undefined) data.storyPoints = storyPoints;
+
+      if (customFields && customFields.length > 0) {
+        const item = await client.getItem(itemId);
+        const trackerId = item.tracker?.id;
+        if (!trackerId) {
+          throw new Error(`Cannot determine tracker for item ${itemId}`);
+        }
+        const schema = await client.getTrackerSchema(trackerId);
+        const trackerConfig = getTrackerConfig(trackerId);
+        if (trackerConfig) {
+          validateCustomFieldsByConfig(trackerConfig, customFields);
+        }
+        data.customFields = resolveCustomFields(customFields, schema, trackerConfig);
+      }
 
       const item = await client.updateItem(itemId, data);
       return { content: [{ type: "text", text: formatItem(item) }] };

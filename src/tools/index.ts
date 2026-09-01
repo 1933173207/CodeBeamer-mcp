@@ -1,6 +1,7 @@
 export { registerProjectTools } from "./projects.js";
 export { registerTrackerTools } from "./trackers.js";
 export { registerTrackerFieldOptionsTool } from "./tracker-field-options.js";
+export { registerTrackerConfigTool } from "./tracker-config.js";
 export { registerItemTools } from "./items.js";
 export { registerItemDetailTools } from "./item-details.js";
 export { registerUserTools } from "./users.js";

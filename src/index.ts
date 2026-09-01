@@ -10,6 +10,7 @@ import {
   registerProjectTools,
   registerTrackerTools,
   registerTrackerFieldOptionsTool,
+  registerTrackerConfigTool,
   registerItemTools,
   registerItemDetailTools,
   registerUserTools,
@@ -40,6 +41,7 @@ const client = new CodebeamerClient(httpClient);
 registerProjectTools(server, client);
 registerTrackerTools(server, client);
 registerTrackerFieldOptionsTool(server, client);
+registerTrackerConfigTool(server);
 registerItemTools(server, client);
 registerItemDetailTools(server, client);
 registerUserTools(server, client);

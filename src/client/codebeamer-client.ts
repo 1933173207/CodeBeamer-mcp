@@ -597,6 +597,21 @@ export class CodebeamerClient {
       if (f) fieldValues.push({ fieldId: f.id, type: "IntegerFieldValue", value: data.storyPoints });
     }
 
+    if (data.customFields && data.customFields.length > 0) {
+      for (const customField of data.customFields) {
+        const entry: Record<string, unknown> = {
+          fieldId: customField.fieldId,
+          type: customField.type,
+        };
+        if (customField.values !== undefined) {
+          entry.values = customField.values;
+        } else if (customField.value !== undefined) {
+          entry.value = customField.value;
+        }
+        fieldValues.push(entry);
+      }
+    }
+
     if (fieldValues.length === 0) return item;
 
     await this.http.put(`/items/${itemId}/fields`, {
