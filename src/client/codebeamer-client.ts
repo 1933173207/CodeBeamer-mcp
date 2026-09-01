@@ -45,12 +45,20 @@ export interface CbTrackerSchemaField {
   id: number;
   name: string;
   type?: string;
+  description?: string;
   trackerItemField?: string;
   legacyRestName?: string;
   options?: CbTrackerSchemaOption[];
   mandatoryIfDependencyFormula?: string;
   multipleValues?: boolean;
   referenceType?: string;
+}
+
+export interface CbFieldOption {
+  id: number;
+  name: string;
+  type?: string;
+  description?: string;
 }
 
 export interface CbTestStep {
@@ -349,6 +357,72 @@ export class CodebeamerClient {
   // Users
   getUser(id: number): Promise<CbUser> {
     return this.http.get(`/users/${id}`, { resource: `user ${id}` });
+  }
+
+  async listUsers(page = 1, pageSize = 100): Promise<CbUser[]> {
+    const raw = await this.http.get<unknown>("/users", {
+      params: { page, pageSize },
+      resource: "users",
+    });
+    return toArray(raw);
+  }
+
+  // Field options
+  async getFieldOptions(
+    trackerId: number,
+    fieldName: string,
+  ): Promise<{ field: CbTrackerSchemaField; options: CbFieldOption[]; note?: string }> {
+    const schema = await this.getTrackerSchema(trackerId);
+    const normalized = fieldName.toLowerCase().trim();
+    const field = schema.find((f) => {
+      const nameMatch = f.name.replace(/<[^>]+>/g, "").toLowerCase().trim() === normalized;
+      const legacyMatch = f.legacyRestName?.toLowerCase() === normalized;
+      return nameMatch || legacyMatch;
+    });
+    if (!field) {
+      throw new Error(`Field '${fieldName}' not found in tracker ${trackerId} schema.`);
+    }
+
+    if (field.type === "OptionChoiceField") {
+      return {
+        field,
+        options: (field.options ?? []).map((o) => ({ id: o.id, name: o.name, type: "ChoiceOptionReference" })),
+      };
+    }
+
+    if (field.type === "TrackerChoiceField") {
+      const tracker = await this.getTracker(trackerId);
+      const projectId = tracker.project?.id;
+      if (!projectId) {
+        return { field, options: [], note: "Cannot determine project for this tracker." };
+      }
+      const trackers = await this.listTrackers(projectId, 1, 100);
+      return {
+        field,
+        options: trackers.map((t) => ({ id: t.id, name: t.name, type: "TrackerReference" })),
+      };
+    }
+
+    if (field.type === "UserChoiceField") {
+      const users = await this.listUsers(1, 100);
+      return {
+        field,
+        options: users.map((u) => ({ id: u.id, name: u.name, type: "UserReference", description: u.email })),
+      };
+    }
+
+    if (field.type === "TrackerItemChoiceField") {
+      const note =
+        "This field references tracker items. Provide the target item ID(s). " +
+        "Use list_trackers and list_tracker_items to find valid item IDs.";
+      return { field, options: [], note };
+    }
+
+    return {
+      field,
+      options: [],
+      note: `Field type '${field.type}' has no predefined options. Provide a plain value of the appropriate type.`,
+    };
   }
 
   // --- Attachments ---

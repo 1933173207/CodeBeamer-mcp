@@ -9,6 +9,7 @@ import { CodebeamerClient } from "./client/codebeamer-client.js";
 import {
   registerProjectTools,
   registerTrackerTools,
+  registerTrackerFieldOptionsTool,
   registerItemTools,
   registerItemDetailTools,
   registerUserTools,
@@ -38,6 +39,7 @@ const client = new CodebeamerClient(httpClient);
 
 registerProjectTools(server, client);
 registerTrackerTools(server, client);
+registerTrackerFieldOptionsTool(server, client);
 registerItemTools(server, client);
 registerItemDetailTools(server, client);
 registerUserTools(server, client);
