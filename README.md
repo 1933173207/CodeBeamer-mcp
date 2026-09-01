@@ -4,7 +4,7 @@
 
 An MCP (Model Context Protocol) server for Codebeamer ALM. Allows Claude and other MCP clients to read and write projects, trackers, and items in Codebeamer using natural language.
 
-## Tools (24)
+## Tools (25)
 
 ### Original tools
 
@@ -39,8 +39,9 @@ An MCP (Model Context Protocol) server for Codebeamer ALM. Allows Claude and oth
 
 | Tool | Change | Description |
 | ---- | ------ | ----------- |
-| `create_item` | Modified | Create a new item in a tracker. Supports folders, item type, parent nesting, and `descriptionFormat` for Wiki markup |
+| `create_item` | Modified | Create a new item in a tracker. Supports folders, item type, parent nesting, `descriptionFormat` for Wiki markup, and `customFields` for tracker-specific mandatory/custom fields |
 | `update_item` | Modified | Update an existing item (name, description, status, priority, assignee, custom fields). Supports `descriptionFormat` for Wiki markup |
+| `get_field_options` | Added | Discover valid values for a tracker field. For choice fields it returns configured options; for tracker-item reference fields it automatically discovers the referenced tracker and lists its items; for user/tracker fields it lists users/trackers |
 | `list_item_attachments` | Added | List attachments for an item |
 | `get_item_attachment` | Added | Get attachment details |
 | `download_item_attachment` | Added | Download attachment content |
@@ -239,6 +240,58 @@ node mock-server.mjs
 CB_URL=http://localhost:3001 CB_USERNAME=mock CB_PASSWORD=mock \
   npx @modelcontextprotocol/inspector node dist/index.js
 ```
+
+## Working with custom fields
+
+Many Codebeamer trackers have mandatory or optional custom fields. `create_item` supports a `customFields` array that accepts human-readable field/option names, and `get_field_options` helps discover valid values before creating an item.
+
+### Discover field options
+
+```json
+{
+  "trackerId": 50060524,
+  "fieldName": "ECU Variant"
+}
+```
+
+Returns:
+
+```markdown
+## Field: ECU Variant
+- **Field ID:** 1012
+- **Type:** TrackerItemChoiceField
+- **Reference Type:** TrackerItemReference
+
+### Options
+| ID | Name | Type |
+|----|------|------|
+| 12634457 | EN1 | TrackerItemReference |
+| 12634458 | EN3 | TrackerItemReference |
+```
+
+For `TrackerItemChoiceField` (e.g. `ECU Variant`, `First Required Sample`), the tool parses the field description to find the referenced tracker and lists its items. For `OptionChoiceField` it returns the configured choice options directly.
+
+### Create a Requirement with mandatory custom fields
+
+```json
+{
+  "trackerId": 50060524,
+  "name": "Requirement",
+  "itemTypeName": "Requirement",
+  "parentId": 15682820,
+  "customFields": [
+    { "fieldName": "Link Ref Type", "value": "Functional Requirement" },
+    { "fieldName": "ASIL", "value": "ASIL A" },
+    { "fieldName": "Verification Approach", "value": "SW Unit Test" },
+    { "fieldName": "ECU Variant", "value": 12634457 },
+    { "fieldName": "First Required Sample", "value": 11524920 },
+    { "fieldName": "CybersecurityRelevant", "value": "Yes" },
+    { "fieldName": "Importance", "value": "Low" }
+  ]
+}
+```
+
+The server validates required fields for the chosen item type and translates names/IDs into the Codebeamer API value model automatically.
 
 ## Configuration
 
