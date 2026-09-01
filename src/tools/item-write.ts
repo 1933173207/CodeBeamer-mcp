@@ -310,10 +310,14 @@ export function registerItemWriteTools(
 
       if (customFields && customFields.length > 0) {
         const trackerConfig = getTrackerConfig(trackerId);
-        if (trackerConfig) {
-          validateCustomFieldsByConfig(trackerConfig, customFields);
-        } else {
-          validateMandatoryCustomFields(schema, customFields, desiredType);
+        if (!trackerConfig) {
+          throw new Error(
+            `No local config found for tracker ${trackerId}. ` +
+              `Please use init_tracker_config tool to complete the configuration first.`,
+          );
+        }
+        if (trackerConfig.requiredFields.length > 0) {
+          validateCustomFieldsByConfig(trackerConfig, customFields, desiredType);
         }
         data.customFields = resolveCustomFields(customFields, schema, trackerConfig);
       }
@@ -400,7 +404,13 @@ export function registerItemWriteTools(
         }
         const schema = await client.getTrackerSchema(trackerId);
         const trackerConfig = getTrackerConfig(trackerId);
-        if (trackerConfig) {
+        if (!trackerConfig) {
+          throw new Error(
+            `No local config found for tracker ${trackerId}. ` +
+              `Please use init_tracker_config tool to complete the configuration first.`,
+          );
+        }
+        if (trackerConfig.requiredFields.length > 0) {
           validateCustomFieldsByConfig(trackerConfig, customFields);
         }
         data.customFields = resolveCustomFields(customFields, schema, trackerConfig);

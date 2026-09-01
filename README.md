@@ -4,7 +4,7 @@
 
 An MCP (Model Context Protocol) server for Codebeamer ALM. Allows Claude and other MCP clients to read and write projects, trackers, and items in Codebeamer using natural language.
 
-## Tools (26)
+## Tools (27)
 
 ### Original tools
 
@@ -39,10 +39,11 @@ An MCP (Model Context Protocol) server for Codebeamer ALM. Allows Claude and oth
 
 | Tool | Change | Description |
 | ---- | ------ | ----------- |
-| `create_item` | Modified | Create a new item in a tracker. Supports folders, item type, parent nesting, `descriptionFormat` for Wiki markup, and `customFields` for tracker-specific mandatory/custom fields. Reads optional local tracker config from `%USERPROFILE%/.code-beamer-wiki/config.json` for strict validation |
-| `update_item` | Modified | Update an existing item (name, description, status, priority, assignee, story points, custom fields). Supports `descriptionFormat` for Wiki markup and `customFields`. Reads optional local tracker config from `%USERPROFILE%/.code-beamer-wiki/config.json` for strict validation |
+| `create_item` | Modified | Create a new item in a tracker. Supports folders, item type, parent nesting, `descriptionFormat` for Wiki markup, and `customFields`. **Requires a local tracker config** (via `init_tracker_config`) when `customFields` are provided; validates fields and values strictly against the config |
+| `update_item` | Modified | Update an existing item (name, description, status, priority, assignee, story points, custom fields). Supports `descriptionFormat` for Wiki markup and `customFields`. **Requires a local tracker config** (via `init_tracker_config`) when `customFields` are provided |
 | `get_field_options` | Added | Discover valid values for a tracker field dynamically from the Codebeamer schema. For choice fields it returns configured options; for tracker-item reference fields it automatically discovers the referenced tracker and lists its items; for user/tracker fields it lists users/trackers |
 | `get_tracker_config` | Added | Read the local tracker configuration file (`%USERPROFILE%/.code-beamer-wiki/config.json`) to see required custom fields and their allowed values for a specific tracker |
+| `init_tracker_config` | Added | Scan a tracker schema, discover all mandatory custom fields and their allowed values, and write them to `%USERPROFILE%/.code-beamer-wiki/config.json`. Must be run before `create_item`/`update_item` with `customFields` for a new tracker |
 | `list_item_attachments` | Added | List attachments for an item |
 | `get_item_attachment` | Added | Get attachment details |
 | `download_item_attachment` | Added | Download attachment content |
@@ -244,14 +245,90 @@ CB_URL=http://localhost:3001 CB_USERNAME=mock CB_PASSWORD=mock \
 
 ## Working with custom fields
 
-Many Codebeamer trackers have mandatory or optional custom fields. `create_item` and `update_item` support a `customFields` array that accepts human-readable field/option names. The server validates required fields and translates names/IDs into the Codebeamer API value model automatically.
+Many Codebeamer trackers have mandatory or optional custom fields. `create_item` and `update_item` support a `customFields` array that accepts human-readable field/option names. **When `customFields` are provided, a local tracker config is required**; otherwise the tool returns an error telling you to run `init_tracker_config` first.
 
-You can discover valid values in two ways:
+### Required workflow
 
-- **`get_field_options`** — dynamic discovery from the live Codebeamer schema.
-- **`get_tracker_config`** — reads a local config file for strict, pre-approved rules.
+1. **Initialize config** for the tracker:
+
+   ```json
+   { "trackerId": 50060524 }
+   ```
+
+   `init_tracker_config` scans the tracker schema, discovers all conditionally mandatory fields and their allowed values, and writes them to `%USERPROFILE%/.code-beamer-wiki/config.json`.
+
+2. **Review config** (optional):
+
+   ```json
+   { "trackerId": 50060524 }
+   ```
+
+   `get_tracker_config` shows what was written.
+
+3. **Create or update** an item with `customFields`.
+
+### Config format
+
+After `init_tracker_config`, the file looks like this:
+
+```json
+[
+  {
+    "trackerId": "50060524",
+    "requiredFields": [
+      {
+        "fieldName": "ASIL",
+        "mandatoryFor": ["Requirement"],
+        "optionalValues": [
+          { "id": 200, "name": "ASIL A" }
+        ]
+      },
+      {
+        "fieldName": "ECU Variant",
+        "mandatoryFor": ["Requirement"],
+        "optionalValues": [
+          { "id": 12634457, "name": "EN1" }
+        ]
+      },
+      {
+        "fieldName": "First Required Sample",
+        "mandatoryFor": ["Requirement"],
+        "optionalValues": [
+          { "id": 11524920, "name": "A sample" }
+        ]
+      }
+    ]
+  }
+]
+```
+
+`mandatoryFor` lists which item types require the field. This lets a single tracker config cover Heading, Information, Requirement, etc., while only enforcing the relevant fields for the current `itemTypeName`.
+
+### Create a Requirement with mandatory custom fields
+
+```json
+{
+  "trackerId": 50060524,
+  "name": "Requirement",
+  "itemTypeName": "Requirement",
+  "parentId": 15682820,
+  "customFields": [
+    { "fieldName": "Link Ref Type", "value": "Functional Requirement" },
+    { "fieldName": "ASIL", "value": "ASIL A" },
+    { "fieldName": "Verification Approach", "value": "SW Unit Test" },
+    { "fieldName": "ECU Variant", "value": "EN1" },
+    { "fieldName": "First Required Sample", "value": "A sample" },
+    { "fieldName": "CybersecurityRelevant", "value": "Yes" },
+    { "fieldName": "Importance", "value": "Low" }
+  ]
+}
+```
+
+Because the local config maps names to IDs, you can pass `"EN1"` instead of `12634457` and `"A sample"` instead of `11524920`. Values are strictly validated against the configured `optionalValues`.
 
 ### Dynamic discovery with `get_field_options`
+
+If you only want to explore values without writing a config file:
 
 ```json
 {
@@ -275,77 +352,7 @@ Returns:
 | 12634458 | EN3 | TrackerItemReference |
 ```
 
-For `TrackerItemChoiceField` (e.g. `ECU Variant`, `First Required Sample`), the tool parses the field description to find the referenced tracker and lists its items. For `OptionChoiceField` it returns the configured choice options directly.
-
-### Strict validation with local config (`get_tracker_config`)
-
-Create `%USERPROFILE%/.code-beamer-wiki/config.json` (or `~/.code-beamer-wiki/config.json` on macOS/Linux):
-
-```json
-[
-  {
-    "trackerId": "50060524",
-    "requiredFields": [
-      {
-        "fieldName": "ASIL",
-        "optionalValues": [
-          { "id": 200, "name": "ASIL A" }
-        ]
-      },
-      {
-        "fieldName": "ECU Variant",
-        "optionalValues": [
-          { "id": 12634457, "name": "EN1" }
-        ]
-      },
-      {
-        "fieldName": "First Required Sample",
-        "optionalValues": [
-          { "id": 11524920, "name": "A sample" }
-        ]
-      }
-    ]
-  }
-]
-```
-
-Then query it:
-
-```json
-{
-  "trackerId": 50060524
-}
-```
-
-When `create_item` or `update_item` is called for a tracker that has a local config:
-
-1. Required fields are checked against the config instead of the live schema.
-2. Values are validated against the configured `optionalValues`.
-3. Names are translated to IDs using the config, so you can pass `"EN1"` instead of `12634457`.
-
-If no local config exists, the tools fall back to dynamic schema discovery.
-
-### Create a Requirement with mandatory custom fields
-
-```json
-{
-  "trackerId": 50060524,
-  "name": "Requirement",
-  "itemTypeName": "Requirement",
-  "parentId": 15682820,
-  "customFields": [
-    { "fieldName": "Link Ref Type", "value": "Functional Requirement" },
-    { "fieldName": "ASIL", "value": "ASIL A" },
-    { "fieldName": "Verification Approach", "value": "SW Unit Test" },
-    { "fieldName": "ECU Variant", "value": 12634457 },
-    { "fieldName": "First Required Sample", "value": 11524920 },
-    { "fieldName": "CybersecurityRelevant", "value": "Yes" },
-    { "fieldName": "Importance", "value": "Low" }
-  ]
-}
-```
-
-If a local config is present for tracker `50060524`, passing `{ "fieldName": "ECU Variant", "value": "EN1" }` will be accepted and translated to ID `12634457` automatically.
+`get_field_options` is useful for exploration; `init_tracker_config` is required for `create_item`/`update_item` with `customFields`.
 
 ## Configuration
 

@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
 import os from "node:os";
 
 export interface TrackerConfigValue {
@@ -10,6 +10,7 @@ export interface TrackerConfigValue {
 export interface TrackerConfigField {
   fieldName: string;
   optionalValues: TrackerConfigValue[];
+  mandatoryFor?: string[];
 }
 
 export interface TrackerConfigEntry {
@@ -59,6 +60,30 @@ export function getTrackerConfig(
   return config.find((entry) => String(entry.trackerId) === String(trackerId));
 }
 
+export function saveTrackerConfig(
+  config: TrackerConfigEntry,
+  forceReload = false,
+): void {
+  const configPath = getTrackerConfigPath();
+  const allConfigs = loadTrackerConfig(forceReload);
+
+  const index = allConfigs.findIndex(
+    (entry) => String(entry.trackerId) === String(config.trackerId),
+  );
+
+  if (index >= 0) {
+    allConfigs[index] = config;
+  } else {
+    allConfigs.push(config);
+  }
+
+  mkdirSync(dirname(configPath), { recursive: true });
+  writeFileSync(configPath, JSON.stringify(allConfigs, null, 2), "utf-8");
+
+  cachedConfig = allConfigs;
+  cachedConfigPath = configPath;
+}
+
 export interface NormalizedCustomFieldInput {
   fieldName: string;
   value: string | number | Array<string | number>;
@@ -67,12 +92,21 @@ export interface NormalizedCustomFieldInput {
 export function validateCustomFieldsByConfig(
   trackerConfig: TrackerConfigEntry,
   provided: NormalizedCustomFieldInput[],
+  itemTypeName?: string,
 ): void {
   const providedMap = new Map(
     provided.map((p) => [stripHtml(p.fieldName).toLowerCase(), p]),
   );
 
   for (const requiredField of trackerConfig.requiredFields) {
+    if (itemTypeName && requiredField.mandatoryFor) {
+      const normalizedItemType = itemTypeName.toLowerCase();
+      const applies = requiredField.mandatoryFor.some(
+        (t) => t.toLowerCase() === normalizedItemType,
+      );
+      if (!applies) continue;
+    }
+
     const normalizedRequiredName = stripHtml(requiredField.fieldName).toLowerCase();
     const providedField = providedMap.get(normalizedRequiredName);
 
@@ -144,15 +178,16 @@ export function formatTrackerConfig(config: TrackerConfigEntry): string {
     "",
     "### Required Fields",
     "",
-    "| Field | Allowed Values |",
-    "|-------|----------------|",
+    "| Field | Mandatory For | Allowed Values |",
+    "|-------|---------------|----------------|",
   ];
 
   for (const field of config.requiredFields) {
+    const mandatoryFor = field.mandatoryFor?.join(", ") ?? "all types";
     const values = field.optionalValues
       .map((v) => `${v.name} (${v.id})`)
       .join(", ");
-    lines.push(`| ${field.fieldName} | ${values} |`);
+    lines.push(`| ${field.fieldName} | ${mandatoryFor} | ${values} |`);
   }
 
   return lines.join("\n");

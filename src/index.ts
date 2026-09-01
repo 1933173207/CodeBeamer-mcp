@@ -41,7 +41,7 @@ const client = new CodebeamerClient(httpClient);
 registerProjectTools(server, client);
 registerTrackerTools(server, client);
 registerTrackerFieldOptionsTool(server, client);
-registerTrackerConfigTool(server);
+registerTrackerConfigTool(server, client);
 registerItemTools(server, client);
 registerItemDetailTools(server, client);
 registerUserTools(server, client);
