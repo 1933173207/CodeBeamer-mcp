@@ -42,8 +42,8 @@ An MCP (Model Context Protocol) server for Codebeamer ALM. Allows Claude and oth
 | `create_item` | Modified | Create a new item in a tracker. Supports folders, item type, parent nesting, `descriptionFormat` for Wiki markup, and `customFields`. **Requires a local tracker config** (via `init_tracker_config`) when `customFields` are provided; validates fields and values strictly against the config |
 | `update_item` | Modified | Update an existing item (name, description, status, priority, assignee, story points, custom fields). Supports `descriptionFormat` for Wiki markup and `customFields`. **Requires a local tracker config** (via `init_tracker_config`) when `customFields` are provided |
 | `get_field_options` | Added | Discover valid values for a tracker field dynamically from the Codebeamer schema. For choice fields it returns configured options; for tracker-item reference fields it automatically discovers the referenced tracker and lists its items; for user/tracker fields it lists users/trackers |
-| `get_tracker_config` | Added | Read the local tracker configuration file (`%USERPROFILE%/.code-beamer-wiki/config.json`) to see required custom fields and their allowed values for a specific tracker |
-| `init_tracker_config` | Added | Scan a tracker schema, discover all mandatory custom fields and their allowed values, and write them to `%USERPROFILE%/.code-beamer-wiki/config.json`. Must be run before `create_item`/`update_item` with `customFields` for a new tracker |
+| `get_tracker_config` | Added | Read the local tracker configuration file (`%USERPROFILE%/.codebeamer-mcp-wiki/config.json`) to see required custom fields and their allowed values for a specific tracker |
+| `init_tracker_config` | Added | Scan a tracker schema, discover all mandatory custom fields and their allowed values, and write them to `%USERPROFILE%/.codebeamer-mcp-wiki/config.json`. Must be run before `create_item`/`update_item` with `customFields` for a new tracker |
 | `list_item_attachments` | Added | List attachments for an item |
 | `get_item_attachment` | Added | Get attachment details |
 | `download_item_attachment` | Added | Download attachment content |
@@ -205,7 +205,7 @@ Then use `"command": "codebeamer-mcp-wiki"` (no `args`) instead of `npx` in any 
 ### Pinning a specific version
 
 ```json
-"args": ["-y", "codebeamer-mcp-wiki@0.5.6"]
+"args": ["-y", "codebeamer-mcp-wiki@0.5.7"]
 ```
 
 ### Updates
@@ -214,15 +214,15 @@ Then use `"command": "codebeamer-mcp-wiki"` (no `args`) instead of `npx` in any 
 | ------ | --------------- |
 | `npx -y codebeamer-mcp-wiki` | Always fetches the latest version |
 | `npm install -g codebeamer-mcp-wiki` | Stays on installed version. Run `npm update -g codebeamer-mcp-wiki` to update |
-| Pinned version (`@0.5.6`) | Never auto-updates; change the version string manually |
+| Pinned version (`@0.5.7`) | Never auto-updates; change the version string manually |
 
 > ⚠️ **Never commit `.mcp.json` with real credentials** — it is listed in `.gitignore`.
 
 ### From source (development)
 
 ```bash
-git clone https://github.com/1933173207/CodeBeamer-mcp.git
-cd CodeBeamer-mcp
+git clone https://github.com/1933173207/codebeamer-mcp-wiki.git
+cd codebeamer-mcp-wiki
 npm install
 npm run build
 ```
@@ -255,7 +255,7 @@ Many Codebeamer trackers have mandatory or optional custom fields. `create_item`
    { "trackerId": 50060524 }
    ```
 
-   `init_tracker_config` scans the tracker schema, discovers all conditionally mandatory fields and their allowed values, and writes them to `%USERPROFILE%/.code-beamer-wiki/config.json`.
+   `init_tracker_config` scans the tracker schema, discovers all conditionally mandatory fields and their allowed values, and writes them to `%USERPROFILE%/.codebeamer-mcp-wiki/config.json`.
 
 2. **Review config** (optional):
 

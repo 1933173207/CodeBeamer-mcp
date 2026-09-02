@@ -84,7 +84,7 @@ export function registerTrackerConfigTool(
     {
       title: "Get Tracker Config",
       description:
-        "Read the local tracker configuration file from %USERPROFILE%/.code-beamer-wiki/config.json. " +
+        "Read the local tracker configuration file from %USERPROFILE%/.codebeamer-mcp-wiki/config.json. " +
         "Returns required custom fields and their allowed values for a specific tracker. " +
         "Use this before create_item or update_item to know which custom fields are mandatory and what values are allowed.",
       inputSchema: {
@@ -120,7 +120,7 @@ export function registerTrackerConfigTool(
       title: "Init Tracker Config",
       description:
         "Discover all mandatory custom fields and their allowed values for a tracker from the live Codebeamer schema, " +
-        "then write them to the local config file at %USERPROFILE%/.code-beamer-wiki/config.json. " +
+        "then write them to the local config file at %USERPROFILE%/.codebeamer-mcp-wiki/config.json. " +
         "You must run this before create_item or update_item can use customFields for this tracker.",
       inputSchema: {
         trackerId: z

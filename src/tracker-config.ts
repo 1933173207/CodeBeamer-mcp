@@ -23,7 +23,7 @@ let cachedConfigPath: string | null = null;
 
 export function getTrackerConfigPath(): string {
   const home = process.env.USERPROFILE ?? process.env.HOME ?? os.homedir();
-  return join(home, ".code-beamer-wiki", "config.json");
+  return join(home, ".codebeamer-mcp-wiki", "config.json");
 }
 
 export function loadTrackerConfig(forceReload = false): TrackerConfigEntry[] {
